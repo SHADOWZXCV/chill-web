@@ -15,7 +15,8 @@ const handleSignIn = (req, res, next) => passport.authenticate('local',
         req.logIn(user, function(err) {
             if (err) return logger.debug(err);
 
-            return res.status(200).send({ ttl: process.env.sessionTTL });
+            const ttl = new Date().getTime() + Number(process.env.sessionTTL);
+            return res.status(200).send({ ttl });
         });
     });
 })(req,res,next);
