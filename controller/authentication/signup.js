@@ -1,10 +1,9 @@
 const passport = require('passport');
 const randtoken = require("rand-token");
-const { userModel } = require('@Models/user');
+const { userModel, validateToken } = require('@Models/user');
 const { hash } = require('@Util/password');
 const { sendEmailToken } = require("@Util/email");
-const { validateToken } = require("@Models/user");
-const logger = require('../../util/log');
+const logger = require('@Util/log');
 
 const handleSignup = (req, res) => {
     const { body } = req;
@@ -46,7 +45,7 @@ const signInNewUser = (req, res, next) => passport.authenticate('signup-local',
 
     req.logIn(user, function(err) {
         if (err) return next(err);
-        return res.status(200).send({ name: user.name });
+        return res.status(200).send({ ttl: process.env.sessionTTL });
   });
 })(req,res,next);
 

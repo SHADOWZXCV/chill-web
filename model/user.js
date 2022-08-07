@@ -8,6 +8,7 @@ class DB {
         this.userSchema = this._createInstance();
         this.userModel = this._createModel();
         this.validateToken = this.validateToken.bind(this);
+        this.validateTokenSignIn = this.validateTokenSignIn.bind(this);
     }
 
     _connect(){
@@ -38,8 +39,6 @@ class DB {
 
             const { emailVerificationToken: orgToken } = user;
             logger.debug(`token sent by user: ${token}, and token in db is: ${orgToken}`);
-            if(!orgToken)
-                return cb(false);
             if(orgToken === token){
                 await this.userModel.updateOne({ email }, {
                     $set: {
@@ -48,6 +47,21 @@ class DB {
                 });
                 return cb(true);
             }
+            return cb(false);
+        })
+    }
+
+    validateTokenSignIn(email, cb){
+        this.userModel.findOne({ email }, async (err, user) => {
+            if(err)
+                return logger.error(err)
+            if(!user)
+                return cb(false);
+
+            const { emailVerificationToken: orgToken } = user;
+            if(orgToken)
+                return cb(false);
+            return cb(true);
         })
     }
 }
