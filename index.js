@@ -33,7 +33,7 @@ app.use(
         // ttl: 1
       }),
       cookie: {
-        maxAge: 1000 * 60,
+        maxAge: Number(process.env.sessionTTL),
         sameSite: true,
       }
     })
