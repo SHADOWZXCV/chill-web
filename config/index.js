@@ -8,7 +8,7 @@ const corsOptions = {
 
 const checkState = () => {
     if(!process.env.origin){
-        logger.error('Cors origin is not specified!');
+        return logger.error('Cors origin is not specified!');
     }
 };
 

@@ -1,16 +1,16 @@
 const argon2 = require('argon2');
 const crypto = require('crypto');
 
-const hash = (password, cb) => {
+const hashPassword = async (password) => {
     const salt = crypto.randomBytes(16);
-    argon2.hash(password, salt).then(data => cb(data, salt));
+    const hashed = await argon2.hash(password, salt);
+
+    return [hashed, salt];
 }
 
-const verify = (password, originalPassword, cb) => {
-    argon2.verify(originalPassword, password).then(data => cb(data));
-}
+const verifyPassword = async (password, originalPassword) => await argon2.verify(originalPassword, password);
 
 module.exports = {
-    hash,
-    verify
+    hashPassword,
+    verifyPassword
 };

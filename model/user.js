@@ -1,69 +1,62 @@
-const mongoose = require('mongoose');
-const { USERSCHEMA } = require('./schemas');
 const logger = require('@Util/log');
+const Model = require('@Models').getModel({
+    modelName: 'User',
+    collectionName: 'users'
+});
 
-class DB {
-    constructor(){
-        this._connect();
-        this.userSchema = this._createInstance();
-        this.userModel = this._createModel();
-        this.validateToken = this.validateToken.bind(this);
-        this.validateTokenSignIn = this.validateTokenSignIn.bind(this);
-    }
+// https://mongoosejs.com/docs/async-await.html
+// For mongoose async-await usage
+// use exec() to return promises from queries, without async, since async gives ability to:
+/**
+ * 1. Wrap a non-promise in a promise if the function does not return a promise itself.
+ * 2. To use await, and since these do not require await, let's avoid them.
+ */
 
-    _connect(){
-        mongoose.connect(process.env.DBUri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-          } ,(err) => err ? logger.fatal(err) : logger.info('db is conntected'));
-    }
+async function validateAndSetToken(email, token){
+    const orgToken = await getUserEmailToken(email);
 
-    getConnection(){
-        return mongoose.connection;
-    }
+    logger.debug(`token sent by user: ${token}, and token in db is: ${orgToken}`);
+    if(orgToken !== token)
+        throw new Error("Tokens don't match!");
 
-    _createInstance(){
-        return mongoose.Schema(USERSCHEMA, { collection: 'users' });
-    }
-
-    _createModel(){
-        return mongoose.model('User', this.userSchema);
-    }
-
-    validateToken(email, token, cb){
-        this.userModel.findOne({ email }, async (err, user) => {
-            if(err)
-                return logger.error(err)
-            if(!user)
-                return cb(false);
-
-            const { emailVerificationToken: orgToken } = user;
-            logger.debug(`token sent by user: ${token}, and token in db is: ${orgToken}`);
-            if(orgToken === token){
-                await this.userModel.updateOne({ email }, {
-                    $set: {
-                        emailVerificationToken: ''
-                    }
-                });
-                return cb(true);
-            }
-            return cb(false);
-        })
-    }
-
-    validateTokenSignIn(email, cb){
-        this.userModel.findOne({ email }, async (err, user) => {
-            if(err)
-                return logger.error(err)
-            if(!user)
-                return cb(false);
-
-            const { emailVerificationToken: orgToken } = user;
-            if(orgToken)
-                return cb(false);
-            return cb(true);
-        })
-    }
+    return update_one({ email }, {
+        emailVerificationToken: ''
+    });
 }
 
-module.exports = new DB();
+async function getUserEmailToken(email){
+    const { emailVerificationToken } = await find_one({ email }, "No such user!");
+
+    return emailVerificationToken;
+}
+
+function update_one(filter, updateData) {
+    return Model.update(filter, {
+        $set: updateData
+    }).exec();
+}
+
+async function find_one(filter, errMessage) {
+    const data = await Model.findOne(filter).exec();
+
+    if(!data)
+        throw new Error(errMessage);
+
+    return data;
+}
+
+function add_record(userData) {
+    return new Model(userData).save();
+}
+
+function findById(id) {
+    return Model.findById(id).exec();
+}
+
+module.exports = {
+    validateAndSetToken,
+    add_record,
+    find_one,
+    update_one,
+    findById
+};

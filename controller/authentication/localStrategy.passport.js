@@ -1,38 +1,18 @@
 const LocalStrategy = require('passport-local');
-const { userModel } = require('@Models/user');
-const { verify } = require('@Util/password');
+const { find_one } = require('@Models/User');
+const { verifyPassword } = require('@Util/password');
 
 const strategy = new LocalStrategy({ usernameField: 'username' },
   (username, password, done) => {
-      userModel.findOne({ username }, (err, user) => {
-        if(err){
-            return done(err);
-        } if(user){
-            return verify(password, user.pw, doesMatch => {
-                return doesMatch ? done(null, user) : done(null, false);
-            });
-        } else {
-            return done(null, false);
-        }
-    });
-  }
-);
-
-const signupStrategy = new LocalStrategy({ usernameField: 'email', passwordField: 'email' },
-  (email, _password, done) => {
-    userModel.findOne({ email }, (err, user) => {
-        if(err){
-            return done(err);
-        } if(!user){
-            return done(null, false);
-        }
-
-        return done(null, user);
+      find_one({ username }, "No such user").then(async (user) => {
+        const isVerified = await verifyPassword(password, user.pw);
+        return isVerified ? done(null, user) : done(null, false);
+    }).catch(_err => {
+        return done(null, false);
     });
   }
 );
 
 module.exports = {
-    localStrategy: strategy,
-    signupLocalStrategy: signupStrategy
+    localStrategy: strategy
 };

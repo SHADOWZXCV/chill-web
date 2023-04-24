@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../chill-web-fe"
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"reduxjs"
+		]
+	}
+}

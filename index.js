@@ -5,14 +5,21 @@ const session = require('express-session');
 const cors = require('cors');
 const passport = require('passport');
 const MongoStore = require('connect-mongo');
-const registerRoutes = require('@Route');
-const { userModel, getConnection } = require('@Models/user');
+const Router = require('@Router');
+const { findById } = require('@Models/User');
 const { signupLocalStrategy, localStrategy } = require('@Controller/authentication/localStrategy.passport');
 const { corsOptions, checkState } = require('./config');
 const morganMiddleware = require('./middleware/morganLogger.middleware');
 const logger = require('@Util/log');
 const app = express();
 
+// Check & set essential configs that should be present:
+/**
+ * 1. CORS configs are set.
+ * 2. session:
+ *  a. secret for hasing session
+ */
+checkState();
 app.use(cors(corsOptions));
 app.use(
     session({
@@ -22,8 +29,7 @@ app.use(
       resave: false,
       saveUninitialized: false,
       store: MongoStore.create({
-        client: getConnection().getClient(),
-        dbName: process.env.dbName,
+        mongoUrl: process.env.DBUri,
         collectionName: "sessions",
         // For some reason all below is
         // not useful in any shape or form
@@ -43,19 +49,20 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(passport.initialize());
 app.use(passport.session());
-registerRoutes(app);
+Router.registerRoutes(app);
 
 
 passport.use('local', localStrategy);
-passport.use('signup-local', signupLocalStrategy);
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 passport.deserializeUser((id, done) => {
-    userModel.findById(id, function(err, user) {
-        done(err, user);
-    });
+  findById(id).then((user) => {
+      done(null, user);
+  }).catch(err => done(err, false));
 });
 
-checkState();
 app.listen(3000, () => logger.info("Chill is on port 3000"));
+
+// for testing.
+module.exports = app;

@@ -27,5 +27,5 @@ const USERSCHEMA = {
 
 
 module.exports = {
-    USERSCHEMA
+    'User': USERSCHEMA
 };

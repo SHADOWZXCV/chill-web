@@ -7,7 +7,7 @@ const levels = {
     // Use this when needing to show steps of an algorithm
     // example: Signing user in!
     error: 1,
-    // some one functionality is broken, system can proceed without it!
+    // A particular functionality is broken, system can proceed without it!
     // example: route has a problem - a third-party API is not functioning - unhandled exceptions
     debug: 2,
     // logging normal info about the application
@@ -18,9 +18,11 @@ const levels = {
 };
 
 // the level specifies that based on it winston will only log
-// anything with less than or equal to the level severity chosen.
+// anything which is <= to the level severity chosen.
 const level = () => {
-    return process.env.LOG_LEVEL || process.env.NODE_ENV === 'development' ? 'http' : 'error';
+    return process.env.NODE_ENV === 'test' ? 'error' :
+    process.env.LOG_LEVEL ||
+    process.env.NODE_ENV === 'development' ? 'http' : 'error';
 };
 
 const colors = {
@@ -34,13 +36,14 @@ const colors = {
 winston.addColors(colors);
 
 const winFormat = winston.format.combine(
+    winston.format.errors({ stack: true }),
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.ms' }),
     // "all" tells the formatter to color both the message and the level!
     winston.format.colorize(),
     winston.format.label({
         label:'[LOGGER]'
     }),
-    winston.format.printf(info => `${info.label} ${info.timestamp} [${info.level}]: ${info.message}`),
+    winston.format.printf(info => `${info.label} ${info.timestamp} [${info.level}]: ${info.message} ${info.stack  ? info.stack : ''}`),
 );
 
 // a.k.a: where the logs would be written.
