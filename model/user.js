@@ -25,22 +25,19 @@ async function validateAndSetToken(email, token){
 }
 
 async function getUserEmailToken(email){
-    const { emailVerificationToken } = await find_one({ email }, "No such user!");
+    const { emailVerificationToken } = await find_one({ email });
 
     return emailVerificationToken;
 }
 
 function update_one(filter, updateData) {
-    return Model.update(filter, {
+    return Model.updateOne(filter, {
         $set: updateData
     }).exec();
 }
 
-async function find_one(filter, errMessage) {
+async function find_one(filter) {
     const data = await Model.findOne(filter).exec();
-
-    if(!data)
-        throw new Error(errMessage);
 
     return data;
 }

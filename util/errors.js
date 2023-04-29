@@ -7,9 +7,6 @@ const types_messages = {
 const addDetailsToError = (message, data = '') => `${message}${data}`;
 
 const generateErrorResponse = (res, code, type) => {
-    if(!type)
-    return res.sendStatus(code);
-
     const msg = types_messages[type];
     const error = {
         errors: {

@@ -4,11 +4,12 @@ const { verifyPassword } = require('@Util/password');
 
 const strategy = new LocalStrategy({ usernameField: 'username' },
   (username, password, done) => {
-      find_one({ username }, "No such user").then(async (user) => {
+      find_one({ username }).then(async (user) => {
+        if (!user) return done(null, false);
         const isVerified = await verifyPassword(password, user.pw);
         return isVerified ? done(null, user) : done(null, false);
     }).catch(_err => {
-        return done(null, false);
+        return done(_err, false);
     });
   }
 );
